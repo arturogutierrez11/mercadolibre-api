@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { Injectable } from '@nestjs/common';
-import { GetValidMeliAccessTokenInteractor } from 'src/core/interactors/token/GetValidMeliAccessTokenInteractor';
+import { GetValidMeliAccessTokenInteractor } from 'src/core/interactors/GetValidMeliAccessTokenInteractor';
 import { MeliHttpErrorHandler } from './error/meliHttpError';
 
 @Injectable()

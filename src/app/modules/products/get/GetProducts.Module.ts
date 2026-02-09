@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { GetProductsController } from 'src/app/controllers/products/get/GetProducts.Controller';
-import { GetValidMeliAccessTokenInteractor } from 'src/core/interactors/token/GetValidMeliAccessTokenInteractor';
+import { GetValidMeliAccessTokenInteractor } from 'src/core/interactors/GetValidMeliAccessTokenInteractor';
 import { IMeliAuthRepository } from 'src/core/adapters/repositories/mercadolibre/auth/IMeliAuthRepository';
 import { MadreHttpClient } from 'src/core/drivers/repositories/madre/http/MadreHttpClient';
 import { MeliTokenRepository } from 'src/core/drivers/repositories/madre/mercadolibre/token/MeliTokenRepository';
