@@ -15,7 +15,8 @@ export class GetProductsController {
 
   @Get()
   @ApiOperation({
-    summary: 'Obtiene productos del seller autenticado en Mercado Libre',
+    summary:
+      'Obtiene todos los Items IDs del seller autenticado en Mercado Libre',
     description: `
 Devuelve las publicaciones del seller autenticado, normalizadas y paginadas.
 

@@ -6,6 +6,7 @@ import { MeliVisitsModule } from './metrics/products/visits/meli-visits.module';
 import { GetMeliTokenModule } from './token/GetMeliToken.Module';
 import { MeliOrdersModule } from './orders/MeliOrders.Module';
 import { MeliCategoriesModule } from './categories/MeliCategories.Module';
+import { GetProductsDetailModule } from './products/get/GetProductsDetail.Module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { MeliCategoriesModule } from './categories/MeliCategories.Module';
     MeliVisitsModule,
     MeliOrdersModule,
     MeliCategoriesModule,
+    GetProductsDetailModule,
 
     // 🔐 Endpoints internos
     GetMeliTokenModule,
