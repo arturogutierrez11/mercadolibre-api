@@ -15,10 +15,17 @@ export class GetProductsService {
     offset = 0,
     limit = 50,
   ): Promise<MeliProductsPage> {
+    /**
+     * 🔥 MercadoLibre no permite offset > 1000
+     * Entonces si superamos 1000 usamos SCAN mode
+     */
+    const useScan = offset >= 1000;
+
     const raw = await this.productsRepo.getProducts({
       status,
-      offset,
+      offset: useScan ? undefined : offset,
       limit,
+      useScan,
     });
 
     if (!raw) {

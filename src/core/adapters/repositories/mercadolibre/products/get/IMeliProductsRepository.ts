@@ -1,7 +1,26 @@
+export type MeliProductStatus = 'active' | 'paused' | 'closed';
+
 export interface IMeliProductsRepository {
   getProducts(params: {
-    status?: 'active' | 'paused' | 'closed';
+    status?: MeliProductStatus;
+
+    // 🔵 Modo clásico (offset)
     offset?: number;
     limit?: number;
-  }): Promise<any>;
+
+    // 🔴 Modo scan (para >1000 items)
+    useScan?: boolean;
+    scrollId?: string;
+  }): Promise<{
+    seller_id: string;
+    results: string[];
+
+    paging?: {
+      limit?: number;
+      offset?: number;
+      total?: number;
+    };
+
+    scroll_id?: string;
+  } | null>;
 }
