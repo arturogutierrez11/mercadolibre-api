@@ -37,15 +37,21 @@ export class MeliProductsRepository implements IMeliProductsRepository {
     if (params.useScan) {
       const query = new URLSearchParams();
 
-      // 🔥 SIEMPRE en scan mode
-      query.append('search_type', 'scan');
+      // 🔥 PRIMERA LLAMADA
+      if (!params.scrollId) {
+        query.append('search_type', 'scan');
 
-      if (params.limit) {
-        query.append('limit', params.limit.toString());
+        if (params.limit) {
+          query.append('limit', params.limit.toString());
+        }
       }
-
-      if (params.scrollId) {
+      // 🔥 SIGUIENTES LLAMADAS
+      else {
         query.append('scroll_id', params.scrollId);
+
+        if (params.limit) {
+          query.append('limit', params.limit.toString());
+        }
       }
 
       const response = await this.httpClient.get<MeliSearchResponse>(
