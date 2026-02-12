@@ -40,18 +40,12 @@ export class MeliProductsRepository implements IMeliProductsRepository {
       // 🔥 PRIMERA LLAMADA
       if (!params.scrollId) {
         query.append('search_type', 'scan');
-
-        if (params.limit) {
-          query.append('limit', params.limit.toString());
-        }
+        query.append('limit', params.limit?.toString() ?? '100');
       }
       // 🔥 SIGUIENTES LLAMADAS
       else {
         query.append('scroll_id', params.scrollId);
-
-        if (params.limit) {
-          query.append('limit', params.limit.toString());
-        }
+        // 🚫 NO mandes limit acá
       }
 
       const response = await this.httpClient.get<MeliSearchResponse>(
