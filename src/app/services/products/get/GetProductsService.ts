@@ -17,7 +17,7 @@ export class GetProductsService {
     forceScan = false,
     scrollId?: string,
   ): Promise<MeliProductsPage> {
-    const useScan = forceScan || offset >= 1000;
+    const useScan = forceScan || offset >= 1000 || !!scrollId;
 
     const raw = await this.productsRepo.getProducts({
       status,
@@ -53,6 +53,7 @@ export class GetProductsService {
         },
       };
     }
+
     const total = raw.paging?.total ?? 0;
 
     return {
