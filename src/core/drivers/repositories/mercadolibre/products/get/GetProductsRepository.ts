@@ -35,21 +35,24 @@ export class MeliProductsRepository implements IMeliProductsRepository {
      * 🔴 SCAN MODE
      */
     if (params.useScan) {
-      const query = new URLSearchParams();
-
       // 🔥 PRIMERA LLAMADA
       if (!params.scrollId) {
-        query.append('search_type', 'scan');
-        query.append('limit', params.limit?.toString() ?? '100');
-      }
-      // 🔥 SIGUIENTES LLAMADAS
-      else {
-        query.append('scroll_id', params.scrollId);
-        // 🚫 NO mandes limit acá
+        const response = await this.httpClient.get<MeliSearchResponse>(
+          `/users/${sellerId}/items/search?search_type=scan&limit=${params.limit ?? 100}`,
+        );
+
+        if (!response) return null;
+
+        return {
+          seller_id: sellerId,
+          results: response.results ?? [],
+          scroll_id: response.scroll_id,
+        };
       }
 
+      // 🔥 SIGUIENTES LLAMADAS
       const response = await this.httpClient.get<MeliSearchResponse>(
-        `/users/${sellerId}/items/search?${query.toString()}`,
+        `/users/${sellerId}/items/search?scroll_id=${params.scrollId}`,
       );
 
       if (!response) return null;
@@ -58,7 +61,6 @@ export class MeliProductsRepository implements IMeliProductsRepository {
         seller_id: sellerId,
         results: response.results ?? [],
         scroll_id: response.scroll_id,
-        paging: response.paging,
       };
     }
 
