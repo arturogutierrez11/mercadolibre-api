@@ -32,27 +32,24 @@ export class MeliProductsRepository implements IMeliProductsRepository {
     const sellerId = getMeliSellerId();
 
     /**
-     * 🔴 SCAN MODE
+     * 🔴 SCAN MODE (CORREGIDO)
      */
     if (params.useScan) {
-      // 🔥 PRIMERA LLAMADA
-      if (!params.scrollId) {
-        const response = await this.httpClient.get<MeliSearchResponse>(
-          `/users/${sellerId}/items/search?search_type=scan&limit=${params.limit ?? 100}`,
-        );
+      const query = new URLSearchParams();
 
-        if (!response) return null;
+      // 🔥 CRÍTICO: SIEMPRE enviar search_type=scan
+      query.append('search_type', 'scan');
 
-        return {
-          seller_id: sellerId,
-          results: response.results ?? [],
-          scroll_id: response.scroll_id,
-        };
+      // mantener mismo limit en todas las llamadas
+      query.append('limit', (params.limit ?? 100).toString());
+
+      // si existe scroll_id lo agregamos
+      if (params.scrollId) {
+        query.append('scroll_id', params.scrollId);
       }
 
-      // 🔥 SIGUIENTES LLAMADAS
       const response = await this.httpClient.get<MeliSearchResponse>(
-        `/users/${sellerId}/items/search?scroll_id=${params.scrollId}`,
+        `/users/${sellerId}/items/search?${query.toString()}`,
       );
 
       if (!response) return null;
@@ -61,11 +58,12 @@ export class MeliProductsRepository implements IMeliProductsRepository {
         seller_id: sellerId,
         results: response.results ?? [],
         scroll_id: response.scroll_id,
+        paging: response.paging,
       };
     }
 
     /**
-     * 🔵 OFFSET MODE
+     * 🔵 OFFSET MODE (normal)
      */
     const query = new URLSearchParams();
 
