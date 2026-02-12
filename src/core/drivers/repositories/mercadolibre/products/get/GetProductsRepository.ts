@@ -5,26 +5,9 @@ import type { IMeliHttpClient } from 'src/core/adapters/repositories/mercadolibr
 
 export type MeliProductStatus = 'active' | 'paused' | 'closed';
 
-/**
- * 🔹 Respuesta real de MercadoLibre
- */
 type MeliSearchResponse = {
   scroll_id?: string;
   results?: string[];
-  paging?: {
-    total?: number;
-    limit?: number;
-    offset?: number;
-  };
-};
-
-/**
- * 🔹 Respuesta normalizada interna
- */
-export type MeliProductsNormalized = {
-  seller_id: string;
-  scroll_id?: string;
-  results: string[];
   paging?: {
     total?: number;
     limit?: number;
@@ -45,15 +28,16 @@ export class MeliProductsRepository implements IMeliProductsRepository {
     limit?: number;
     scrollId?: string;
     useScan?: boolean;
-  }): Promise<MeliProductsNormalized | null> {
+  }) {
     const sellerId = getMeliSellerId();
-    const query = new URLSearchParams();
 
+    /**
+     * 🔴 SCAN MODE
+     */
     if (params.useScan) {
-      /**
-       * PRIMERA llamada (sin scrollId)
-       */
+      // 🔥 PRIMERA LLAMADA
       if (!params.scrollId) {
+        const query = new URLSearchParams();
         query.append('search_type', 'scan');
 
         if (params.limit) {
@@ -68,14 +52,13 @@ export class MeliProductsRepository implements IMeliProductsRepository {
 
         return {
           seller_id: sellerId,
-          scroll_id: response.scroll_id,
           results: response.results ?? [],
+          scroll_id: response.scroll_id, // 👈 CRÍTICO
+          paging: response.paging,
         };
       }
 
-      /**
-       * SIGUIENTES llamadas (solo scroll_id)
-       */
+      // 🔥 SIGUIENTES LLAMADAS (SOLO scroll_id)
       const response = await this.httpClient.get<MeliSearchResponse>(
         `/users/${sellerId}/items/search?scroll_id=${params.scrollId}`,
       );
@@ -84,15 +67,17 @@ export class MeliProductsRepository implements IMeliProductsRepository {
 
       return {
         seller_id: sellerId,
-        scroll_id: response.scroll_id,
         results: response.results ?? [],
+        scroll_id: response.scroll_id, // 👈 CRÍTICO
+        paging: response.paging,
       };
     }
 
     /**
-     * 🔵 NORMAL MODE (offset)
-     * ⚠ MercadoLibre NO permite offset > 1000
+     * 🔵 OFFSET MODE
      */
+    const query = new URLSearchParams();
+
     if (params.status) query.append('status', params.status);
     if (params.offset !== undefined)
       query.append('offset', params.offset.toString());

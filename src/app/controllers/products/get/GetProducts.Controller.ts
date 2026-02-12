@@ -48,6 +48,16 @@ Este endpoint mantiene una interfaz estable para el cliente.
     description: 'Estado de las publicaciones del seller',
     example: 'active',
   })
+  @ApiQuery({
+    name: 'useScan',
+    required: false,
+    type: Boolean,
+  })
+  @ApiQuery({
+    name: 'scrollId',
+    required: false,
+    type: String,
+  })
 
   // 🔵 OFFSET
   @ApiQuery({
@@ -100,7 +110,15 @@ Este endpoint mantiene una interfaz estable para el cliente.
     @Query('status') status: MeliProductStatus = 'active',
     @Query('offset') offset = 0,
     @Query('limit') limit = 50,
+    @Query('useScan') useScan?: string,
+    @Query('scrollId') scrollId?: string,
   ) {
-    return this.service.getProducts(status, Number(offset), Number(limit));
+    return this.service.getProducts(
+      status,
+      Number(offset),
+      Number(limit),
+      useScan === 'true',
+      scrollId,
+    );
   }
 }

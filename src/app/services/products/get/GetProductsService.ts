@@ -14,18 +14,17 @@ export class GetProductsService {
     status: MeliProductStatus = 'active',
     offset = 0,
     limit = 50,
+    forceScan = false,
+    scrollId?: string,
   ): Promise<MeliProductsPage> {
-    /**
-     * 🔥 MercadoLibre no permite offset > 1000
-     * Entonces si superamos 1000 usamos SCAN mode
-     */
-    const useScan = offset >= 1000;
+    const useScan = forceScan || offset >= 1000;
 
     const raw = await this.productsRepo.getProducts({
       status,
       offset: useScan ? undefined : offset,
       limit,
       useScan,
+      scrollId,
     });
 
     if (!raw) {
@@ -41,6 +40,19 @@ export class GetProductsService {
       };
     }
 
+    if (useScan) {
+      return {
+        seller_id: raw.seller_id,
+        items: raw.results ?? [],
+        scroll_id: raw.scroll_id,
+        pagination: {
+          limit,
+          offset: 0,
+          total: raw.paging?.total ?? 0,
+          has_next: (raw.results?.length ?? 0) > 0,
+        },
+      };
+    }
     const total = raw.paging?.total ?? 0;
 
     return {
