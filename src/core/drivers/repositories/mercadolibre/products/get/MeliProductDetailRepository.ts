@@ -28,6 +28,7 @@ export class MeliProductDetailRepository implements IMeliProductDetailRepository
 
     return {
       id: item.id,
+      categoryId: item.category_id,
       title: item.title,
       price: item.price,
       currency: item.currency_id,
