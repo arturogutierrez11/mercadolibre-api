@@ -17,7 +17,17 @@ export class GetCategoriesTreeRepository implements IGetCategoriesTreeRepository
       return [];
     }
 
-    return Promise.all(roots.map((root) => this.getFullBranch(root.id)));
+    const branches = await Promise.all(
+      roots.map((root) =>
+        this.meliHttpClient.get<any>(`/categories/${root.id}`),
+      ),
+    );
+
+    return branches.map((branch) => this.mapCategory(branch));
+  }
+
+  async getBranchById(categoryId: string): Promise<Category> {
+    return this.getFullBranch(categoryId);
   }
 
   private async getFullBranch(categoryId: string): Promise<Category> {
@@ -29,16 +39,31 @@ export class GetCategoriesTreeRepository implements IGetCategoriesTreeRepository
       throw new Error(`Category ${categoryId} not found`);
     }
 
-    return this.mapCategory(category);
-  }
+    const children: Category[] = [];
 
-  private mapCategory(category: any): Category {
+    for (const child of category.children_categories ?? []) {
+      const fullChild = await this.getFullBranch(child.id);
+      children.push(fullChild);
+    }
+
     return {
       id: category.id,
       name: category.name,
-      children: (category.children_categories ?? []).map((child: any) =>
-        this.mapCategory(child),
-      ),
+      hasChildren: (category.children_categories ?? []).length > 0,
+      children,
+    };
+  }
+
+  private mapCategory(category: any): Category {
+    const children = (category.children_categories ?? []).map((child: any) =>
+      this.mapCategory(child),
+    );
+
+    return {
+      id: category.id,
+      name: category.name,
+      hasChildren: children.length > 0,
+      children,
     };
   }
 }
