@@ -9,11 +9,17 @@ export class GetCategoriesTreeService {
     private readonly repo: IGetCategoriesTreeRepository,
   ) {}
 
-  getTree(): Promise<Category[]> {
-    return this.repo.getTree();
+  // 🔹 Devuelve solo categorías padre (nivel 1)
+  async getRootCategories(): Promise<{ id: string; name: string }[]> {
+    return this.repo.getRootCategories();
   }
 
-  getBranchById(categoryId: string): Promise<Category> {
-    return this.repo.getBranchById(categoryId);
+  // 🔹 Devuelve categoría completa por ID
+  async getCategoryById(categoryId: string): Promise<Category> {
+    if (!categoryId) {
+      throw new Error('CategoryId is required');
+    }
+
+    return this.repo.getCategoryById(categoryId);
   }
 }

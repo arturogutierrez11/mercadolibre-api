@@ -1,52 +1,54 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiOkResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 import { GetCategoriesTreeService } from 'src/app/services/categories/GetCategoriesTreeService';
+import { Category } from 'src/core/entitis/mercadolibre/categories/Category';
 
 @ApiTags('MercadoLibre - Categories')
 @Controller('meli/categories')
 export class MeliCategoriesController {
   constructor(private readonly service: GetCategoriesTreeService) {}
 
-  @Get('tree')
+  // 🔹 Nivel 1 solamente (categorías padre)
+  @Get()
   @ApiOperation({
-    summary: 'Obtiene el árbol completo de categorías',
+    summary: 'Obtiene las categorías raíz (nivel 1)',
     description: `
-Devuelve el árbol completo de categorías de MercadoLibre para el site **MLA**.
-
-📌 Incluye todas las categorías raíz y sus subcategorías anidadas.
+Devuelve únicamente las categorías principales del site **MLA**.
+No incluye subcategorías.
     `,
   })
   @ApiOkResponse({
-    description: 'Árbol de categorías',
-  })
-  getTree() {
-    return this.service.getTree();
-  }
-
-  @Get(':id/branch')
-  @ApiOperation({
-    summary: 'Obtiene la rama completa desde una categoría',
-    description: `
-Devuelve la categoría solicitada junto con todas sus subcategorías anidadas.
-    `,
-  })
-  @ApiOkResponse({
-    description: 'Rama completa de la categoría',
+    description: 'Listado de categorías padre',
     schema: {
-      example: {
-        id: 'MLA9304',
-        name: 'Souvenirs, Cotillón y Fiestas',
-        children: [
-          {
-            id: 'MLA24673',
-            name: 'Cotillón',
-            children: [],
-          },
-        ],
-      },
+      example: [
+        { id: 'MLA5725', name: 'Accesorios para Vehículos' },
+        { id: 'MLA1512', name: 'Agro' },
+        { id: 'MLA1403', name: 'Alimentos y Bebidas' },
+      ],
     },
   })
-  getBranch(@Param('id') id: string) {
-    return this.service.getBranchById(id);
+  getRootCategories() {
+    return this.service.getRootCategories();
+  }
+
+  // 🔹 Categoría puntual (con hijos directos)
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Obtiene una categoría por ID',
+    description: `
+Devuelve la categoría solicitada junto con sus subcategorías directas.
+    `,
+  })
+  @ApiParam({
+    name: 'id',
+    example: 'MLA5725',
+  })
+  getCategory(@Param('id') id: string): Promise<Category> {
+    return this.service.getCategoryById(id);
   }
 }

@@ -10,44 +10,18 @@ export class GetCategoriesTreeRepository implements IGetCategoriesTreeRepository
     private readonly meliHttpClient: IMeliHttpClient,
   ) {}
 
-  // 🔥 Nivel 1 + Nivel 2
-  async getTree(): Promise<Category[]> {
+  async getRootCategories(): Promise<{ id: string; name: string }[]> {
     const roots = await this.meliHttpClient.get<any[]>('/sites/MLA/categories');
 
     if (!roots) return [];
 
-    const result: Category[] = [];
-
-    for (const root of roots) {
-      const rootData = await this.meliHttpClient.get<any>(
-        `/categories/${root.id}`,
-      );
-
-      const level2Children =
-        rootData.children_categories?.map((child: any) => ({
-          id: child.id,
-          name: child.name,
-          hasChildren: true,
-          children: [], // 🔥 dejamos vacío
-        })) ?? [];
-
-      result.push({
-        id: rootData.id,
-        name: rootData.name,
-        hasChildren: level2Children.length > 0,
-        children: level2Children,
-      });
-    }
-
-    return result;
+    return roots.map((r) => ({
+      id: r.id,
+      name: r.name,
+    }));
   }
 
-  // 🔥 Solo baja profundo desde nivel 2
-  async getBranchById(categoryId: string): Promise<Category> {
-    return this.buildDeepBranch(categoryId);
-  }
-
-  private async buildDeepBranch(categoryId: string): Promise<Category> {
+  async getCategoryById(categoryId: string): Promise<Category> {
     const category = await this.meliHttpClient.get<any>(
       `/categories/${categoryId}`,
     );
@@ -56,18 +30,24 @@ export class GetCategoriesTreeRepository implements IGetCategoriesTreeRepository
       throw new Error(`Category ${categoryId} not found`);
     }
 
-    const children: Category[] = [];
-
-    for (const child of category.children_categories ?? []) {
-      const fullChild = await this.buildDeepBranch(child.id);
-      children.push(fullChild);
-    }
-
     return {
       id: category.id,
       name: category.name,
-      hasChildren: children.length > 0,
-      children,
+      picture: category.picture,
+      permalink: category.permalink,
+      totalItems: category.total_items_in_this_category,
+
+      pathFromRoot: category.path_from_root?.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+      })),
+
+      children:
+        category.children_categories?.map((child: any) => ({
+          id: child.id,
+          name: child.name,
+          totalItems: child.total_items_in_this_category,
+        })) ?? [],
     };
   }
 }
