@@ -10,46 +10,24 @@ export class GetCategoriesTreeRepository implements IGetCategoriesTreeRepository
     private readonly meliHttpClient: IMeliHttpClient,
   ) {}
 
-  // 🔹 TREE = nivel 1 + nivel 2 solamente
   async getTree(): Promise<Category[]> {
     const roots = await this.meliHttpClient.get<any[]>('/sites/MLA/categories');
 
     if (!roots) return [];
 
-    const result: Category[] = [];
-
-    for (const root of roots) {
-      const category = await this.meliHttpClient.get<any>(
-        `/categories/${root.id}`,
-      );
-
-      const children = (category.children_categories ?? []).map(
-        (child: any) => ({
-          id: child.id,
-          name: child.name,
-          hasChildren: true, // puede tener más niveles
-          children: [], // no los cargamos acá
-        }),
-      );
-
-      result.push({
-        id: category.id,
-        name: category.name,
-        hasChildren: children.length > 0,
-        children,
-      });
-    }
-
-    return result;
+    return roots.map((r) => ({
+      id: r.id,
+      name: r.name,
+      hasChildren: true,
+      children: [],
+    }));
   }
 
-  // 🔹 BRANCH = árbol profundo completo desde ese nodo
   async getBranchById(categoryId: string): Promise<Category> {
-    return this.getFullBranch(categoryId);
+    return this.buildFullBranch(categoryId);
   }
 
-  // 🔥 Recursión profunda SOLO para branch
-  private async getFullBranch(categoryId: string): Promise<Category> {
+  private async buildFullBranch(categoryId: string): Promise<Category> {
     const category = await this.meliHttpClient.get<any>(
       `/categories/${categoryId}`,
     );
@@ -61,7 +39,7 @@ export class GetCategoriesTreeRepository implements IGetCategoriesTreeRepository
     const children: Category[] = [];
 
     for (const child of category.children_categories ?? []) {
-      const fullChild = await this.getFullBranch(child.id);
+      const fullChild = await this.buildFullBranch(child.id);
       children.push(fullChild);
     }
 
