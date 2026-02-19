@@ -10,26 +10,45 @@ export class GetCategoriesTreeRepository implements IGetCategoriesTreeRepository
     private readonly meliHttpClient: IMeliHttpClient,
   ) {}
 
+  // 🔹 TREE = nivel 1 + nivel 2 solamente
   async getTree(): Promise<Category[]> {
     const roots = await this.meliHttpClient.get<any[]>('/sites/MLA/categories');
 
-    if (!roots || !Array.isArray(roots)) {
-      return [];
+    if (!roots) return [];
+
+    const result: Category[] = [];
+
+    for (const root of roots) {
+      const category = await this.meliHttpClient.get<any>(
+        `/categories/${root.id}`,
+      );
+
+      const children = (category.children_categories ?? []).map(
+        (child: any) => ({
+          id: child.id,
+          name: child.name,
+          hasChildren: true, // puede tener más niveles
+          children: [], // no los cargamos acá
+        }),
+      );
+
+      result.push({
+        id: category.id,
+        name: category.name,
+        hasChildren: children.length > 0,
+        children,
+      });
     }
 
-    const branches = await Promise.all(
-      roots.map((root) =>
-        this.meliHttpClient.get<any>(`/categories/${root.id}`),
-      ),
-    );
-
-    return branches.map((branch) => this.mapCategory(branch));
+    return result;
   }
 
+  // 🔹 BRANCH = árbol profundo completo desde ese nodo
   async getBranchById(categoryId: string): Promise<Category> {
     return this.getFullBranch(categoryId);
   }
 
+  // 🔥 Recursión profunda SOLO para branch
   private async getFullBranch(categoryId: string): Promise<Category> {
     const category = await this.meliHttpClient.get<any>(
       `/categories/${categoryId}`,
@@ -45,19 +64,6 @@ export class GetCategoriesTreeRepository implements IGetCategoriesTreeRepository
       const fullChild = await this.getFullBranch(child.id);
       children.push(fullChild);
     }
-
-    return {
-      id: category.id,
-      name: category.name,
-      hasChildren: (category.children_categories ?? []).length > 0,
-      children,
-    };
-  }
-
-  private mapCategory(category: any): Category {
-    const children = (category.children_categories ?? []).map((child: any) =>
-      this.mapCategory(child),
-    );
 
     return {
       id: category.id,
